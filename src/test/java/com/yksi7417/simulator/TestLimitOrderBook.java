@@ -33,4 +33,15 @@ public class TestLimitOrderBook {
 		assertEquals(lastQuoteSnapshot.getBidSize(0), 10000);
 	}
 
+	@Test
+	public void placeBidOrderToSamePrice_expectBidSizeWouldAggregate() {
+		LimitOrderBook lob = new LimitOrderBook("0700.HK"); 
+		lob.placeOrder(lobFactory.create(Side.BUY, 10000, 9.87));
+		lob.placeOrder(lobFactory.create(Side.BUY, 5000, 9.87));
+		Quote lastQuoteSnapshot = lob.getQuoteSnapshot();
+		assertFalse(lastQuoteSnapshot.isEmpty());
+		assertEquals(lastQuoteSnapshot.getBid(0), 9.87, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getBidSize(0), 15000);
+	}
+
 }

@@ -16,6 +16,7 @@ public class LimitOrder {
 		this.side = side;
 		this.qty = qty;
 		this.price = price;
+		this.timestamp = timestamp; 
 	}
 
 	public Side getSide() {

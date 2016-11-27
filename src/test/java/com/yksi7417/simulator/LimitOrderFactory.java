@@ -16,7 +16,7 @@ import com.yksi7417.simulator.LimitOrder.Side;
 
 public class LimitOrderFactory {
 	final DateTimeFormatter dtf = DateTimeFormat.forPattern("MM/dd/yyyy HH:mm:ss.SSS");
-	final int timestep = 1; 
+	final int timestep = 100; 
 
 	// internal clock that keep moving foward as there is new order coming; 
 	DateTime now = dtf.parseDateTime("11/28/2016 09:30:00.000");
