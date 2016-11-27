@@ -22,17 +22,18 @@ public class Quote {
 		this.ticker = ticker;
 	}
 	public boolean isEmpty() {
-		int sum = 0; 
-		for (int i=0; i< bidSizes.size(); i++) 
-			sum += bidSizes.get(i);
-		for (int i=0; i< askSizes.size(); i++) 
-			sum += askSizes.get(i);
-		return sum == 0; 
+		return bidSizes.isEmpty() && askSizes.isEmpty();
 	}
 	public double getBid(int i) {
 		return this.bids.get(i);
 	}
 	public int getBidSize(int i) {
 		return this.bidSizes.get(i);
+	}
+	public double getAsk(int i) {
+		return this.asks.get(i);
+	}
+	public int getAskSize(int i) {
+		return this.askSizes.get(i);
 	}
 }
