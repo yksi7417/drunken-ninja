@@ -72,4 +72,25 @@ public class TestLimitOrderBook {
 		assertEquals(lastQuoteSnapshot.getBidSize(1), 8000);
 	}
 
+	@Test
+	public void placeAskOrderToDifferentPrice_expectBidSizeWouldAggregateAndThereWillBeTwoLevelsOrderDoesnotMatter() {
+		LimitOrderBook lob = new LimitOrderBook("0700.HK"); 
+		lob.placeOrder(lobFactory.create(Side.SELL, 20000, 9.88));
+		lob.placeOrder(lobFactory.create(Side.BUY, 10000, 9.87));
+		lob.placeOrder(lobFactory.create(Side.SELL, 18000, 9.89));
+		lob.placeOrder(lobFactory.create(Side.BUY, 8000, 9.86));
+		lob.placeOrder(lobFactory.create(Side.SELL, 15000, 9.88));
+		lob.placeOrder(lobFactory.create(Side.BUY, 5000, 9.87));
+		Quote lastQuoteSnapshot = lob.getQuoteSnapshot();
+		assertFalse(lastQuoteSnapshot.isEmpty());
+		assertEquals(lastQuoteSnapshot.getBid(0), 9.87, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getBidSize(0), 15000);
+		assertEquals(lastQuoteSnapshot.getBid(1), 9.86, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getBidSize(1), 8000);
+		assertEquals(lastQuoteSnapshot.getAsk(0), 9.88, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getAskSize(0), 35000);
+		assertEquals(lastQuoteSnapshot.getAsk(1), 9.89, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getAskSize(1), 18000);
+	}
+
 }

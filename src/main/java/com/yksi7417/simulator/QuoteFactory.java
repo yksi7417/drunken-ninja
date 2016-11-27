@@ -50,7 +50,7 @@ public class QuoteFactory {
 		Set<LimitOrder> bidTree = new TreeSet<LimitOrder>(lob.bidQueue.comparator());
 		bidTree.addAll(lob.bidQueue);
 		Set<LimitOrder> askTree = new TreeSet<LimitOrder>(lob.askQueue.comparator());
-		bidTree.addAll(lob.askQueue);
+		askTree.addAll(lob.askQueue);
 		
 		bidTree.forEach(lo->addToQuote(lo, quote.bids, quote.bidSizes)) ; 
 		askTree.forEach(lo->addToQuote(lo, quote.asks, quote.askSizes)) ; 
