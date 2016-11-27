@@ -6,14 +6,11 @@ import java.util.PriorityQueue;
 public class LimitOrderBook {
 	private final String ticker;
 
-	private final Comparator<LimitOrder> bidPxComparator = (LimitOrder o1, LimitOrder o2)-> (int)(o1.getPrice()-o2.getPrice()); 
-	private final Comparator<LimitOrder> bidPxTimeComparator = new PriceTimeComparator(bidPxComparator);
-	
-	private final Comparator<LimitOrder> askPxComparator = (LimitOrder o1, LimitOrder o2)-> (int)(o2.getPrice()-o1.getPrice()); 
-	private final Comparator<LimitOrder> askPxTimeComparator = new PriceTimeComparator(askPxComparator);
+	private final Comparator<LimitOrder> bidPxComparator = (LimitOrder o1, LimitOrder o2)-> (int)((o2.getPrice()-o1.getPrice())/PriceUtils.Epsilon); 
+	private final Comparator<LimitOrder> askPxComparator = (LimitOrder o1, LimitOrder o2)-> (int)((o1.getPrice()-o2.getPrice())/PriceUtils.Epsilon); 
 
-	PriorityQueue<LimitOrder> bidQueue = new PriorityQueue<LimitOrder>(bidPxTimeComparator);
-	PriorityQueue<LimitOrder> askQueue = new PriorityQueue<LimitOrder>(askPxTimeComparator);
+	PriorityQueue<LimitOrder> bidQueue = new PriorityQueue<LimitOrder>( new PriceTimeComparator(bidPxComparator));
+	PriorityQueue<LimitOrder> askQueue = new PriorityQueue<LimitOrder>( new PriceTimeComparator(askPxComparator));
 			
 	public LimitOrderBook(String ticker) {
 		super();
@@ -33,7 +30,17 @@ public class LimitOrderBook {
 	}
 
 	public void placeOrder(LimitOrder limitOrder) {
-		bidQueue.add(limitOrder);
+		switch (limitOrder.getSide()) {
+		case BUY:
+			bidQueue.add(limitOrder);
+			break;
+		case SELL:
+		case SHORTSELL:
+			askQueue.add(limitOrder);
+			break;
+		default:
+			throw new RuntimeException("Do not expect any side other than BUY/SELL/SHORTSELL, please review design");
+		}
 	}
 	
 }

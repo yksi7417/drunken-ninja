@@ -3,7 +3,7 @@ package com.yksi7417.simulator;
 import org.joda.time.DateTime;
 
 public class LimitOrder {
-	public enum Side { BUY, SELL, SHORTSELL }
+	public enum Side { BUY, SELL , SHORTSELL }
 	
 	private Side side; 
 	private int qty; 

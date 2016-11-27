@@ -1,6 +1,8 @@
 package com.yksi7417.simulator;
 
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 
 public class QuoteFactory {
@@ -28,10 +30,30 @@ public class QuoteFactory {
 		}
 	}
 	
+	/** 
+	 * create a quote object with top 5 levels of bid/ask
+	 * intent to be used to peek into the internal state of LOB
+	 * do not intent to be called often, as it's expensive to construct an quote object 
+	 * every time there is an update, as entire LOB is examined 
+	 * 
+	 * In this implementation, the backend of LOB is using an Priority Queue (PQ) 
+	 * which is quick for matching, but iterating an PriorityQueue doesn't give you a sorted
+	 * list, so in order to accurately reflect the top five level, a sorting is needed 
+	 * 
+	 * @param lob
+	 * @return Quote object of top 5 levels 
+	 */
 	static public Quote create(LimitOrderBook lob) {
 		Quote quote = new Quote(lob.getTicker());
-		lob.bidQueue.forEach(lo->addToQuote(lo, quote.bids, quote.bidSizes)) ; 
-		lob.askQueue.forEach(lo->addToQuote(lo, quote.asks, quote.askSizes)) ; 
+		
+		//convert the treeset to sort the bidQueue/askQueue
+		Set<LimitOrder> bidTree = new TreeSet<LimitOrder>(lob.bidQueue.comparator());
+		bidTree.addAll(lob.bidQueue);
+		Set<LimitOrder> askTree = new TreeSet<LimitOrder>(lob.askQueue.comparator());
+		bidTree.addAll(lob.askQueue);
+		
+		bidTree.forEach(lo->addToQuote(lo, quote.bids, quote.bidSizes)) ; 
+		askTree.forEach(lo->addToQuote(lo, quote.asks, quote.askSizes)) ; 
 		return quote; 
 	}
 }
