@@ -170,6 +170,120 @@ public class TestLimitOrderBook {
 		
 	}
 
+	@Test
+	public void placeBuyVeryBigOrderAtBestAsk_expectChangeOfBestBidAndBestAsk() {
+		LimitOrderBook lob = buildDefaultLOB();
+		CompletableFuture<List<Trade>> future = new CompletableFuture<>();
+		Consumer<List<Trade>> tcb = trades -> future.complete(trades); 
+		lob.subscribeTradeEvent(tcb);
+		
+		// this is a big order, should create 2 trade events that would cause a match in order book
+		lob.placeOrder(lobFactory.create(Side.BUY, 40000, 9.88));
+		
+		try {
+			List<Trade> trades = future.get(200, TimeUnit.MILLISECONDS);
+			assertEquals(trades.size(), 2);
+			assertEquals(trades.get(0).getPrice(), 9.88, PriceUtils.Epsilon);
+			assertEquals(trades.get(0).getSize(), 20000);
+			assertEquals(trades.get(1).getPrice(), 9.88, PriceUtils.Epsilon);
+			assertEquals(trades.get(1).getSize(), 15000);
+		} catch (Exception e) {
+			fail("failed during asserting of price & size " + e);
+			e.printStackTrace();
+		}
+		
+		// order book is updated accordingly, taking away the last trades
+		Quote lastQuoteSnapshot = lob.getQuoteSnapshot();
+		assertFalse(lastQuoteSnapshot.isEmpty());
+		assertEquals(lastQuoteSnapshot.getBid(0), 9.88, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getBidSize(0), 5000);
+		assertEquals(lastQuoteSnapshot.getBid(1), 9.87, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getBidSize(1), 15000);
+		assertEquals(lastQuoteSnapshot.getBid(2), 9.86, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getBidSize(2), 8000);
+		assertEquals(lastQuoteSnapshot.getAsk(0), 9.89, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getAskSize(0), 18000);
+		
+		lob.unsubscribeTradeEvent(tcb);
+		
+	}
+
+	@Test
+	public void placeBuyVeryBigOrderAtOneLevelBetterThanAsk_expectTradeWithDifferentPrice() {
+		LimitOrderBook lob = buildDefaultLOB();
+		CompletableFuture<List<Trade>> future = new CompletableFuture<>();
+		Consumer<List<Trade>> tcb = trades -> future.complete(trades); 
+		lob.subscribeTradeEvent(tcb);
+		
+		// this is a big order, should create 2 trade events that would cause a match in order book
+		lob.placeOrder(lobFactory.create(Side.BUY, 40000, 9.89));
+		
+		try {
+			List<Trade> trades = future.get(200, TimeUnit.MILLISECONDS);
+			assertEquals(trades.size(), 3);
+			assertEquals(trades.get(0).getPrice(), 9.88, PriceUtils.Epsilon);
+			assertEquals(trades.get(0).getSize(), 20000);
+			assertEquals(trades.get(1).getPrice(), 9.88, PriceUtils.Epsilon);
+			assertEquals(trades.get(1).getSize(), 15000);
+			assertEquals(trades.get(2).getPrice(), 9.89, PriceUtils.Epsilon);
+			assertEquals(trades.get(2).getSize(), 5000);
+		} catch (Exception e) {
+			fail("failed during asserting of price & size " + e);
+			e.printStackTrace();
+		}
+		
+		// order book is updated accordingly, taking away the last trades
+		Quote lastQuoteSnapshot = lob.getQuoteSnapshot();
+		assertFalse(lastQuoteSnapshot.isEmpty());
+		assertEquals(lastQuoteSnapshot.getBid(0), 9.87, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getBidSize(0), 15000);
+		assertEquals(lastQuoteSnapshot.getBid(1), 9.86, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getBidSize(1), 8000);
+		assertEquals(lastQuoteSnapshot.getAsk(0), 9.89, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getAskSize(0), 13000);
+		
+		lob.unsubscribeTradeEvent(tcb);
+		
+	}
+
+	@Test
+	public void placeSellVeryBigOrderAtBestBid_expectChangeOfBestBidAndBestAsk() {
+		LimitOrderBook lob = buildDefaultLOB();
+		CompletableFuture<List<Trade>> future = new CompletableFuture<>();
+		Consumer<List<Trade>> tcb = trades -> future.complete(trades); 
+		lob.subscribeTradeEvent(tcb);
+		
+		// this is a big order, should create 2 trade events that would cause a match in order book
+		lob.placeOrder(lobFactory.create(Side.SELL, 40000, 9.87));
+		
+		try {
+			List<Trade> trades = future.get(200, TimeUnit.MILLISECONDS);
+			assertEquals(trades.size(), 2);
+			assertEquals(trades.get(0).getPrice(), 9.87, PriceUtils.Epsilon);
+			assertEquals(trades.get(0).getSize(), 10000);
+			assertEquals(trades.get(1).getPrice(), 9.87, PriceUtils.Epsilon);
+			assertEquals(trades.get(1).getSize(), 5000);
+		} catch (Exception e) {
+			fail("failed during asserting of price & size " + e);
+			e.printStackTrace();
+		}
+		
+		// order book is updated accordingly, taking away the last trades
+		Quote lastQuoteSnapshot = lob.getQuoteSnapshot();
+		assertFalse(lastQuoteSnapshot.isEmpty());
+		assertEquals(lastQuoteSnapshot.getBid(0), 9.86, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getBidSize(0), 8000);
+		assertEquals(lastQuoteSnapshot.getAsk(0), 9.87, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getAskSize(0), 25000);
+		assertEquals(lastQuoteSnapshot.getAsk(1), 9.88, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getAskSize(1), 35000);
+		assertEquals(lastQuoteSnapshot.getAsk(2), 9.89, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getAskSize(2), 18000);
+		
+		lob.unsubscribeTradeEvent(tcb);
+		
+	}
+
 	private LimitOrderBook buildDefaultLOB() {
 		LimitOrderBook lob = new LimitOrderBook("0700.HK"); 
 		lob.placeOrder(lobFactory.create(Side.SELL, 20000, 9.88));
