@@ -20,10 +20,6 @@ public class TestLimitOrderBook {
 	LimitOrderFactory lobFactory = new LimitOrderFactory();
 
 	
-	@Before
-	public void init(){
-	}
-	
 	@Test
 	public void expectEmptyBook() {
 		LimitOrderBook lob = new LimitOrderBook("0700.HK"); 

@@ -19,7 +19,7 @@ public class TestTickDataConvertor {
 		double [] rawPxData = {99.6 ,99.7 , 99.8,  99.9 , 100,  100.1,  100.2,  100.3, 100.4, 100.5};
 		int [] rawSizeData = { 500, 400, 300, 300, 100, 500, 1000, 2000, 2500, 3000 };
 		
-		TickDataConvertor convertor = new TickDataConvertor("0700.HK");
+		TickDataSource convertor = new TickDataConvertor("0700.HK");
 		convertor.applyLatestTickData(rawPxData, rawSizeData);
 		Queue<LimitOrder> limitOrders = convertor.getLimitOrders();
         assertThat(limitOrders, hasSize(10));
@@ -41,7 +41,7 @@ public class TestTickDataConvertor {
 		double [] rawPxData = {99.6 ,99.7 , 99.8,  99.9 , 100,  100.1,  100.2,  100.3, 100.4, 100.5};
 		int [] rawSizeData = { 500, 400, 300, 300, 100, 500, 1000, 2000, 2500, 3000 };
 		
-		TickDataConvertor convertor = new TickDataConvertor("0700.HK");
+		TickDataSource convertor = new TickDataConvertor("0700.HK");
 		convertor.applyLatestTickData(rawPxData, rawSizeData);
 		Queue<LimitOrder> limitOrders = convertor.getLimitOrders();
         assertThat(limitOrders, hasSize(10));
@@ -70,7 +70,7 @@ public class TestTickDataConvertor {
 		double [] rawPxData = {99.6 ,99.7 , 99.8,  99.9 , 100,  100.1,  100.2,  100.3, 100.4, 100.5};
 		int [] rawSizeData = { 500, 400, 300, 300, 100, 500, 1000, 2000, 2500, 3000 };
 		
-		TickDataConvertor convertor = new TickDataConvertor("0700.HK");
+		TickDataSource convertor = new TickDataConvertor("0700.HK");
 		convertor.applyLatestTickData(rawPxData, rawSizeData);
 		Queue<LimitOrder> limitOrders = convertor.getLimitOrders();
 		
@@ -102,7 +102,7 @@ public class TestTickDataConvertor {
 		double [] rawPxData = {99.6 ,99.7 , 99.8,  99.9 , 100,  100.1,  100.2,  100.3, 100.4, 100.5};
 		int [] rawSizeData = { 500, 400, 300, 300, 100, 500, 1000, 2000, 2500, 3000 };
 		
-		TickDataConvertor convertor = new TickDataConvertor("0700.HK");
+		TickDataSource convertor = new TickDataConvertor("0700.HK");
 		convertor.applyLatestTickData(rawPxData, rawSizeData);
 		Queue<LimitOrder> limitOrders = convertor.getLimitOrders();
         assertThat(limitOrders, hasSize(10));
@@ -148,7 +148,7 @@ public class TestTickDataConvertor {
 		double [] rawPxData = {99.6 ,99.7 , 99.8,  99.9 , 100,  100.1,  100.2,  100.3, 100.4, 100.5};
 		int [] rawSizeData = { 500, 400, 300, 300, 100, 500, 1000, 2000, 2500, 3000 };
 		
-		TickDataConvertor convertor = new TickDataConvertor("0700.HK");
+		TickDataSource convertor = new TickDataConvertor("0700.HK");
 		convertor.applyLatestTickData(rawPxData, rawSizeData);
 		Queue<LimitOrder> limitOrders = convertor.getLimitOrders();
         assertThat(limitOrders, hasSize(10));
@@ -192,7 +192,7 @@ public class TestTickDataConvertor {
 		double [] rawPxData = {99.6 ,99.7 , 99.8,  99.9 , 100,  100.1,  100.2,  100.3, 100.4, 100.5};
 		int [] rawSizeData = { 500, 400, 300, 300, 200, 500, 1000, 2000, 2500, 3000 };
 		
-		TickDataConvertor convertor = new TickDataConvertor("0700.HK");
+		TickDataSource convertor = new TickDataConvertor("0700.HK");
 		convertor.applyLatestTickData(rawPxData, rawSizeData);
 		Queue<LimitOrder> limitOrders = convertor.getLimitOrders();
 		

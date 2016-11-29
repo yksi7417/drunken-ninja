@@ -26,7 +26,7 @@ import com.yksi7417.simulator.LimitOrder.Side;
  *
  */
 
-public class TickDataConvertor {
+public class TickDataConvertor implements TickDataSource {
 
 	// internal clock that keep moving forward as there is new order coming; 
 	final DateTimeFormatter dtf = DateTimeFormat.forPattern("MM/dd/yyyy HH:mm:ss.SSS");
@@ -70,6 +70,10 @@ public class TickDataConvertor {
 		return myOrders.removeAll(pxKey); 
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.yksi7417.simulator.tickdata.TickDataSource#applyLatestTickData(double[], int[])
+	 */
+	@Override
 	public void applyLatestTickData(double[] rawPxData, int[] rawSizeData) {
 		Queue<LimitOrder> nuOrders = new LinkedList<>();
 		Queue<LimitOrder> cxOrders = new LinkedList<>();
@@ -159,14 +163,26 @@ public class TickDataConvertor {
 		return bidSnapshot;
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.yksi7417.simulator.tickdata.TickDataSource#getTicker()
+	 */
+	@Override
 	public String getTicker() {
 		return ticker;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.yksi7417.simulator.tickdata.TickDataSource#getLimitOrders()
+	 */
+	@Override
 	public Queue<LimitOrder> getLimitOrders() {
 		return newLimitOrders;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.yksi7417.simulator.tickdata.TickDataSource#getCancelOrders()
+	 */
+	@Override
 	public Queue<LimitOrder> getCancelOrders() {
 		return cancelOrders;
 	}
