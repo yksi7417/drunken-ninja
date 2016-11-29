@@ -294,4 +294,41 @@ public class TestLimitOrderBook {
 		lob.placeOrder(lobFactory.create(Side.BUY, 5000, 9.87));
 		return lob;
 	}
+	
+	@Test
+	public void cancelOutstandingOrder_expectReductionOfOrderSizeAtThatPriceLevel() {
+		LimitOrderBook lob = buildDefaultLOB();
+		
+		LimitOrder testOrder = lobFactory.create(Side.SELL, 40000, 9.88);
+		lob.placeOrder(testOrder);
+		
+		// order book is updated accordingly, taking away the last trades
+		Quote lastQuoteSnapshot = lob.getQuoteSnapshot();
+		assertFalse(lastQuoteSnapshot.isEmpty());
+		assertEquals(lastQuoteSnapshot.getBid(0), 9.87, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getBidSize(0), 15000);
+		assertEquals(lastQuoteSnapshot.getBid(1), 9.86, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getBidSize(1), 8000);
+		assertEquals(lastQuoteSnapshot.getAsk(0), 9.88, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getAskSize(0), 75000);
+		assertEquals(lastQuoteSnapshot.getAsk(1), 9.89, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getAskSize(1), 18000);
+		
+		boolean cancelSuccess = lob.cancelOrder(testOrder);
+		assertTrue(cancelSuccess);
+
+		lastQuoteSnapshot = lob.getQuoteSnapshot();
+		assertEquals(lastQuoteSnapshot.getBid(0), 9.87, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getBidSize(0), 15000);
+		assertEquals(lastQuoteSnapshot.getBid(1), 9.86, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getBidSize(1), 8000);
+		assertEquals(lastQuoteSnapshot.getAsk(0), 9.88, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getAskSize(0), 35000);
+		assertEquals(lastQuoteSnapshot.getAsk(1), 9.89, PriceUtils.Epsilon);
+		assertEquals(lastQuoteSnapshot.getAskSize(1), 18000);
+		
+		
+	}
+	
+	
 }

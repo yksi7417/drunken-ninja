@@ -72,6 +72,11 @@ public class LimitOrderBook {
 		}
 	}
 
+	public boolean cancelOrder(LimitOrder limitOrder) {
+		PriorityQueue<LimitOrder> sameSideQueue = getSameSideQueue(limitOrder);
+		return sameSideQueue.remove(limitOrder);
+	}
+
 	private PriorityQueue<LimitOrder> getSameSideQueue(LimitOrder limitOrder) {
 		switch (limitOrder.getSide()) {
 		case BUY:

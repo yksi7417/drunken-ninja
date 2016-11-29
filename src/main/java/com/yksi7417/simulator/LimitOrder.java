@@ -1,5 +1,7 @@
 package com.yksi7417.simulator;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.joda.time.DateTime;
 
 /**
@@ -10,7 +12,10 @@ import org.joda.time.DateTime;
 
 public class LimitOrder {
 	public enum Side { BUY, SELL }
-	
+
+	private static final AtomicInteger idGenerator = new AtomicInteger(1);
+
+	private int orderid; 
 	private Side side; 
 	private int qty; 
 	// price as double, but assume to be 6 decimal points precision
@@ -18,15 +23,29 @@ public class LimitOrder {
 	private DateTime timestamp;
 	
 	public LimitOrder(LimitOrder other) {
-		this(other.getSide(), other.getQty(), other.getPrice(), other.getTimestamp());
+		this(other.orderid, other.getSide(), other.getQty(), other.getPrice(), other.getTimestamp());
 	}
 	
-	public LimitOrder(Side side, int qty, double price, DateTime timestamp) {
+	private LimitOrder(int orderId, Side side, int qty, double price, DateTime timestamp) {
 		super();
+		this.orderid = orderId;
 		this.side = side;
 		this.qty = qty;
 		this.price = price;
 		this.timestamp = timestamp; 
+	}
+
+	public LimitOrder(Side side, int qty, double price, DateTime timestamp) {
+		super();
+		this.orderid = idGenerator.incrementAndGet();
+		this.side = side;
+		this.qty = qty;
+		this.price = price;
+		this.timestamp = timestamp; 
+	}
+
+	public int getOrderid() {
+		return orderid;
 	}
 
 	public Side getSide() {
@@ -85,6 +104,28 @@ public class LimitOrder {
 		}
 		
 		return new Trade(tradeQty, this.getPrice());
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + orderid;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		LimitOrder other = (LimitOrder) obj;
+		if (orderid != other.orderid)
+			return false;
+		return true;
 	}
 
 }
