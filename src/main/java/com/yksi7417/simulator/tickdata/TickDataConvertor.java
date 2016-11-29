@@ -2,6 +2,7 @@ package com.yksi7417.simulator.tickdata;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
@@ -16,6 +17,11 @@ import com.yksi7417.simulator.LimitOrder.Side;
 
 /** 
  * Convert Tick Data from array format -> LimitOrders
+	assumption on behaviour 
+		* if bid -> bid / ask -> ask , increase size -> add new order 
+		* if bid -> ask / ask -> bid , create an order big enough to fill the previous queue + put order in.  
+		* if bid -> bid / ask -> ask , decrease size -> find all orders of this price level, cancel and new 
+		* 
  * @author SI
  *
  */
@@ -39,27 +45,10 @@ public class TickDataConvertor {
 	Map<Integer,Integer> bidSnapshot = new HashMap<>();
 	Map<Integer,Integer> askSnapshot = new HashMap<>();
 
-	Queue<LimitOrder> newlimitOrders = new LinkedList<>();
-	Queue<Integer> cancelOrderIds = new LinkedList<>();
+	Queue<LimitOrder> newLimitOrders = new LinkedList<>();
+	Queue<LimitOrder> cancelOrders = new LinkedList<>();
 
 
-	/***
-	   for (President pres : US_PRESIDENTS_IN_ORDER) {
-	     multimap.put(pres.firstName(), pres.lastName());
-	   }
-	   for (String firstName : multimap.keySet()) {
-	     List<String> lastNames = multimap.get(firstName);
-	     out.println(firstName + ": " + lastNames);
-	   }
-	***/
-
-	/*
-	// assumption on behaviour 
-		* if bid -> bid / ask -> ask , increase size -> add new order 
-		* if bid -> bid / ask -> ask , decrease size -> find all orders of this price level, cancel and new 
-		* if bid -> ask / ask -> bid , create an order big enough to fill the previous queue + put order in.  
-	*/
-	
 	private int castKey(double price) {
 		return (int) (price * 1000000); 
 	}
@@ -76,7 +65,14 @@ public class TickDataConvertor {
 		return Side.BUY;
 	}
 	
+	private List<LimitOrder> findAndRemoveListOfOrdersThatMatch(Side side, Integer pxKey) {
+		ListMultimap<Integer, LimitOrder> myOrders = Side.BUY.equals(side) ? myBuyOrders :mySellOrders;
+		return myOrders.removeAll(pxKey); 
+	}
+	
 	public void applyLatestTickData(double[] rawPxData, int[] rawSizeData) {
+		Queue<LimitOrder> nuOrders = new LinkedList<>();
+		Queue<LimitOrder> cxOrders = new LinkedList<>();
 
 		for (int i=0; i<rawPxData.length; i++) {
 			Side side = getSide(i, rawPxData.length);
@@ -88,14 +84,42 @@ public class TickDataConvertor {
 					otherSideSnapshot, pxKey);	
 
 			if (sizeDifference > 0)
-				newlimitOrders.add(determineLimitOrder(side, sizeDifference, rawPxData[i]));
+				nuOrders.add(determineLimitOrder(side, sizeDifference, rawPxData[i]));
 			else if (sizeDifference < 0) {
-//				cancelOrders.add(findListOfOrdersThatMatch(i, rawPxData[i]));
-				newlimitOrders.add(determineLimitOrder(side, rawSizeData[i], rawPxData[i]));
+				cxOrders.addAll(findAndRemoveListOfOrdersThatMatch(side, pxKey));
+				nuOrders.add(determineLimitOrder(side, rawSizeData[i], rawPxData[i]));
 			}
+			
+			thisSideSnapshot.remove(pxKey);
+			otherSideSnapshot.remove(pxKey);
 		}
-		
+
+		cancelAnyRemainingOrders(cxOrders);
 		takeSnapshot(rawPxData, rawSizeData);
+		keepTrackOfMyOwnOrders(nuOrders, cxOrders);
+
+		this.newLimitOrders.addAll(nuOrders);
+		this.cancelOrders.addAll(cxOrders);
+	}
+
+	private void keepTrackOfMyOwnOrders(Queue<LimitOrder> nuOrders, Queue<LimitOrder> cxOrders) {
+		for (LimitOrder limitOrder : newLimitOrders)  {
+			
+		}
+		for (LimitOrder limitOrder : nuOrders)  {
+			if (Side.BUY.equals(limitOrder.getSide()))
+				myBuyOrders.put(castKey(limitOrder.getPrice()), limitOrder);
+			else if (Side.SELL.equals(limitOrder.getSide()))
+				mySellOrders.put(castKey(limitOrder.getPrice()), limitOrder);
+		}
+	}
+
+	private void cancelAnyRemainingOrders(Queue<LimitOrder> cxOrders) {
+		for (Map.Entry<Integer, Integer> entry : bidSnapshot.entrySet())  {
+			cxOrders.addAll(findAndRemoveListOfOrdersThatMatch(Side.BUY, entry.getKey()));
+		}
+		for (Map.Entry<Integer, Integer> entry : askSnapshot.entrySet()) 
+			cxOrders.addAll(findAndRemoveListOfOrdersThatMatch(Side.SELL, entry.getKey()));
 	}
 
 	private void takeSnapshot(double[] rawPxData, int[] rawSizeData) {
@@ -140,7 +164,10 @@ public class TickDataConvertor {
 	}
 
 	public Queue<LimitOrder> getLimitOrders() {
-		return newlimitOrders;
+		return newLimitOrders;
 	}
 
+	public Queue<LimitOrder> getCancelOrders() {
+		return cancelOrders;
+	}
 }
