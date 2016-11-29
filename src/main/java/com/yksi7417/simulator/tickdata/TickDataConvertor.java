@@ -1,9 +1,9 @@
 package com.yksi7417.simulator.tickdata;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -22,10 +22,9 @@ import com.yksi7417.simulator.LimitOrder.Side;
 
 public class TickDataConvertor {
 
+	// internal clock that keep moving forward as there is new order coming; 
 	final DateTimeFormatter dtf = DateTimeFormat.forPattern("MM/dd/yyyy HH:mm:ss.SSS");
 	final int timestep = 100; 
-
-	// internal clock that keep moving forward as there is new order coming; 
 	DateTime now = dtf.parseDateTime("11/28/2016 09:30:00.000");
 	
 	private String ticker; 
@@ -40,8 +39,8 @@ public class TickDataConvertor {
 	Map<Integer,Integer> bidSnapshot = new HashMap<>();
 	Map<Integer,Integer> askSnapshot = new HashMap<>();
 
-	List<LimitOrder> newlimitOrders = new ArrayList<>();
-	List<Integer> cancelOrderIds = new ArrayList<>();
+	Queue<LimitOrder> newlimitOrders = new LinkedList<>();
+	Queue<Integer> cancelOrderIds = new LinkedList<>();
 
 
 	/***
@@ -71,31 +70,22 @@ public class TickDataConvertor {
 		return order;
 	}
 	
+	private Side getSide(int position, int arrayLength) {
+		if (position >= arrayLength /2) 
+			return Side.SELL;
+		return Side.BUY;
+	}
+	
 	public void applyLatestTickData(double[] rawPxData, int[] rawSizeData) {
 
 		for (int i=0; i<rawPxData.length; i++) {
-			Map<Integer,Integer> thisSideSnapshot = bidSnapshot;
-			Map<Integer,Integer> otherSideSnapshot = askSnapshot;
-			Side side = Side.BUY;
-			
-			if (i >= rawPxData.length /2) {
-				side = Side.SELL;
-				thisSideSnapshot = askSnapshot;
-				otherSideSnapshot = bidSnapshot;
-			}
-
+			Side side = getSide(i, rawPxData.length);
+			Map<Integer, Integer> thisSideSnapshot = getThisSideSnapshot(side);
+			Map<Integer, Integer> otherSideSnapshot = getOtherSideSnapshot(side);
 			Integer pxKey = castKey(rawPxData[i]);
-			int sizeDifference = 0;
-			if (thisSideSnapshot.containsKey(pxKey)) {
-				int prevSize = thisSideSnapshot.get(pxKey);
-				sizeDifference = rawSizeData[i] - prevSize ;
-			}
-			else if (otherSideSnapshot.containsKey(pxKey)) {
-				int prevSize = otherSideSnapshot.get(pxKey);
-				sizeDifference = rawSizeData[i] + prevSize ;
-			}
-			else 
-				sizeDifference = rawSizeData[i];	
+			
+			int sizeDifference = getSizeDiff(rawSizeData[i], thisSideSnapshot,
+					otherSideSnapshot, pxKey);	
 
 			if (sizeDifference > 0)
 				newlimitOrders.add(determineLimitOrder(side, sizeDifference, rawPxData[i]));
@@ -104,14 +94,52 @@ public class TickDataConvertor {
 				newlimitOrders.add(determineLimitOrder(side, rawSizeData[i], rawPxData[i]));
 			}
 		}
+		
+		takeSnapshot(rawPxData, rawSizeData);
+	}
 
+	private void takeSnapshot(double[] rawPxData, int[] rawSizeData) {
+		this.bidSnapshot.clear();
+		this.askSnapshot.clear();
+		for (int i=0; i<rawPxData.length; i++) {
+			Side side = getSide(i, rawPxData.length);
+			Map<Integer, Integer> thisSideSnapshot = getThisSideSnapshot(side);
+			thisSideSnapshot.put(castKey(rawPxData[i]), rawSizeData[i]);
+		}
+	}
+
+	private int getSizeDiff(int thisSize, 
+			Map<Integer, Integer> thisSideSnapshot,
+			Map<Integer, Integer> otherSideSnapshot, Integer pxKey) {
+		int sizeDifference = 0;
+		if (thisSideSnapshot.containsKey(pxKey)) {
+			int prevSize = thisSideSnapshot.get(pxKey);
+			sizeDifference = thisSize - prevSize ;
+		}
+		else if (otherSideSnapshot.containsKey(pxKey)) {
+			int prevSize = otherSideSnapshot.get(pxKey);
+			sizeDifference = thisSize + prevSize ;
+		}
+		else 
+			sizeDifference = thisSize;
+		return sizeDifference;
+	}
+
+	private Map<Integer, Integer> getOtherSideSnapshot(Side side) {
+		if (Side.SELL.equals(side)) return bidSnapshot;
+		return askSnapshot;
+	}
+
+	private Map<Integer, Integer> getThisSideSnapshot(Side side) {
+		if (Side.SELL.equals(side)) return askSnapshot;
+		return bidSnapshot;
 	}
 	
 	public String getTicker() {
 		return ticker;
 	}
 
-	public List<LimitOrder> getLimitOrders() {
+	public Queue<LimitOrder> getLimitOrders() {
 		return newlimitOrders;
 	}
 
