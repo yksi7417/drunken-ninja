@@ -187,4 +187,51 @@ public class TestTickDataConvertor {
         
 	}
 
+	@Test
+	public void secondQuoteOfDecreaseBestBidAndBestAsk_expectTwoCancelAndTwoNewOrders() {
+		double [] rawPxData = {99.6 ,99.7 , 99.8,  99.9 , 100,  100.1,  100.2,  100.3, 100.4, 100.5};
+		int [] rawSizeData = { 500, 400, 300, 300, 200, 500, 1000, 2000, 2500, 3000 };
+		
+		TickDataConvertor convertor = new TickDataConvertor("0700.HK");
+		convertor.applyLatestTickData(rawPxData, rawSizeData);
+		Queue<LimitOrder> limitOrders = convertor.getLimitOrders();
+		
+		while (!limitOrders.isEmpty()) {
+			LimitOrder limitOrder = limitOrders.poll();
+			// some processing blahblahblah
+		}
+
+		double [] rawPxData1 = {99.6 ,99.7 , 99.8,  99.9 , 100,  100.1,  100.2,  100.3, 100.4, 100.5};
+		int [] rawSizeData1 = { 500, 400, 300, 300, 100, 100, 1000, 2000, 2500, 3000 };
+		
+		convertor.applyLatestTickData(rawPxData1, rawSizeData1);
+        assertThat(limitOrders, hasSize(2));
+
+		LimitOrder limitOrder = limitOrders.poll();
+		assertEquals(Side.BUY, limitOrder .getSide());
+        assertEquals(100.0, limitOrder.getPrice(), PriceUtils.Epsilon);
+        assertEquals(100, limitOrder.getQty());
+
+		limitOrder = limitOrders.poll();
+		assertEquals(Side.SELL, limitOrder .getSide());
+        assertEquals(100.1, limitOrder.getPrice(), PriceUtils.Epsilon);
+        assertEquals(100, limitOrder.getQty());
+
+		Queue<LimitOrder> cancelOrders = convertor.getCancelOrders();
+        assertThat(cancelOrders, hasSize(2));
+        
+		LimitOrder cancelOrder = cancelOrders.poll();
+		assertEquals(Side.BUY, cancelOrder .getSide());
+        assertEquals(200, cancelOrder.getQty());
+        assertEquals(100, cancelOrder.getPrice(), PriceUtils.Epsilon);
+
+        cancelOrder = cancelOrders.poll();
+		assertEquals(Side.SELL, cancelOrder .getSide());
+        assertEquals(500, cancelOrder.getQty());
+        assertEquals(100.1, cancelOrder.getPrice(), PriceUtils.Epsilon);
+        
+        
+	}
+	
+	
 }
